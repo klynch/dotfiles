@@ -1,0 +1,5 @@
+emacs.d/games
+emacs.d/auto-save-list/
+*.elc
+*~
+.*~
