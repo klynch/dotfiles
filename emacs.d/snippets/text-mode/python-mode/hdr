@@ -1,0 +1,8 @@
+#name : Python file template .... :
+# --
+#!/usr/bin/env python
+#encoding: utf-8
+
+__author__ = "`(user-full-name)` (`(mail-host-address)`)"
+__date__ = "`(current-time-string)`"
+$0
