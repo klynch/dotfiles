@@ -1,0 +1,10 @@
+[color]
+	branch = auto
+	status = auto
+	diff = auto
+	ui = auto
+[user]
+	name = Kevin Lynch
+	email = klynch@gmail.com 
+[pack]
+	threads = 0
