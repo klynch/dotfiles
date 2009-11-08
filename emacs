@@ -5,27 +5,51 @@
 (if (file-exists-p dotemacs-private)
     (load dotemacs-private))
 
-(add-to-list 'load-path site-lisp-dir)
+;; (add-to-list 'load-path site-lisp-dir)
 
+;;TODO functionify this!
+(if (fboundp 'normal-top-level-add-subdirs-to-load-path)
+    (let* ((my-lisp-dir site-lisp-dir)
+           (default-directory my-lisp-dir))
+      (setq load-path (cons my-lisp-dir load-path))
+      (normal-top-level-add-subdirs-to-load-path)))
+
+(if (fboundp 'image-load-path) nil (setq image-load-path '()))
+(add-to-list 'image-load-path (concat dotemacs-dir "/images/"))
+
+;;TODO add this to a mode that can be enabled / disabled
 (autoload 'nuke-trailing-whitespace "whitespace" nil t)
 (add-hook 'write-file-hooks 'nuke-trailing-whitespace)
 
+;; TODO reduce color theme to only the themes i want
 (require 'color-theme)
+;;(require 'color-theme-tango)
 (color-theme-tty-dark)
 
-;; turn off the toolbar
-(if (>= emacs-major-version 21)
-    (tool-bar-mode -1))
+;; (color-theme-initialize)
+;; (if window-system
+;;     (color-theme-tango))
+;; (if (not (window-system))
+;;     (color-theme-tty-dark))
+
+;;(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
 ;; GROWL or its alternatives. must set directory first
 (setq todochiku-icons-directory (concat dotemacs-dir "/todochiku-icons"))
 (require 'todochiku)
-
+(message "Todochiku loaded")
 ;; TODO load these only if we are on a mac
 (if (eq system-type 'darwin)
     (progn
       (setq default-input-method "MacOSX")
-      (setq mac-pass-command-to-system nil)))
+      (setq mac-pass-command-to-system nil)
+      (setq mac-command-modifier 'meta)
+      (setq mac-option-modifier nil)
+      (setq x-select-enable-clipboard t)
+      ;; We don't want to pop open new frames all the time
+      (setq ns-pop-up-frames nil)))
 
 ;; (require 'textmate)
 ;; (tm/initialize)
@@ -39,7 +63,10 @@
 ;; (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
 ;; (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
+;; TODO fix twitter faces
 (require 'twit)
+(setq twit-show-user-images t)
+
 (autoload 'twit-show-recent-tweets "twit" nil t)
 (autoload 'twit-show-at-tweets     "twit" nil t)
 (autoload 'twit-show-friends 		"twit" nil t)
@@ -174,9 +201,6 @@
 ;; Color syntax
 (global-font-lock-mode t)
 
-;; Show scroll bar on right
-(set-scroll-bar-mode 'right)
-
 ;; Column/line numbering in status line
 (setq-default column-number-mode t)
 (setq-default line-number-mode t)
@@ -199,9 +223,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Behaviour
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Remove trailing whitespace on save
-;;(add-hook 'write-file-hooks 'nuke-trailing-whitespace)
 
 ;; Replace highlighted text with typed text
 (delete-selection-mode t)
@@ -240,12 +261,21 @@
 (setq tab-width 2)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; YaSnippet
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq snippets-dir (concat dotemacs-dir "/snippets"))
+
+(require 'yasnippet)
+(yas/initialize)
+(yas/load-directory snippets-dir)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; C/C++ Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customizations for all modes in CC Mode.
 (add-hook 'c-mode-common-hook
           (lambda ()
-            (setq-default show-trailing-whitespace t)
+            (setq show-trailing-whitespace t)
 
             (c-toggle-electric-state 1)
             (c-toggle-hungry-state 1)
@@ -259,11 +289,12 @@
 ;; Set the indentation width for C-style programming languages
 (setq-default c-basic-offset 2)
 
-(require 'textmate)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Text Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;Text mode is happier than Fundamental mode ;-)
+(setq default-major-mode 'text-mode)
 
 ;; Activate word-wrapping for text mode
 (add-hook 'text-mode-hook 'text-mode-hook-identify)
@@ -273,7 +304,7 @@
 (add-hook 'text-mode-hook '(lambda () (setq indent-tabs-mode t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Additional modes
+;;; MATLAB Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'matlab)
@@ -282,6 +313,110 @@
       '("-nojvm" "-nodesktop" "-nodisplay" "-nosplash"))
 (setq matlab-shell-history-file "~/.matlab/R2009a/history.m")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Python Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (require 'python)
+;; (require 'auto-complete)
+;; (autoload 'pymacs-apply "pymacs")
+;; (autoload 'pymacs-call "pymacs")
+;; (autoload 'pymacs-eval "pymacs" nil t)
+;; (autoload 'pymacs-exec "pymacs" nil t)
+;; (autoload 'pymacs-load "pymacs" nil t)
+
+;; ;; Initialize Rope
+;; (pymacs-load "ropemacs" "rope-")
+;; (setq ropemacs-enable-autoimport t)
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;; Auto-completion
+;; ;;;  Integrates:
+;; ;;;   1) Rope
+;; ;;;   2) Yasnippet
+;; ;;;   all with AutoComplete.el
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (defun prefix-list-elements (list prefix)
+;;   (let (value)
+;;     (nreverse
+;;      (dolist (element list value)
+;;       (setq value (cons (format "%s%s" prefix element) value))))))
+
+;; (defvar ac-source-rope
+;;   '((candidates
+;;      . (lambda ()
+;;          (prefix-list-elements (rope-completions) ac-target))))
+;;   "Source for Rope")
+
+;; (defun ac-python-find ()
+;;   "Python `ac-find-function'."
+;;   (require 'thingatpt)
+;;   (let ((symbol (car-safe (bounds-of-thing-at-point 'symbol))))
+;;     (if (null symbol)
+;;         (if (string= "." (buffer-substring (- (point) 1) (point)))
+;;             (point)
+;;           nil)
+;;       symbol)))
+
+;; (defun ac-python-candidate ()
+;;   "Python `ac-candidates-function'"
+;;   (let (candidates)
+;;     (dolist (source ac-sources)
+;;       (if (symbolp source)
+;;           (setq source (symbol-value source)))
+;;       (let* ((ac-limit (or (cdr-safe (assq 'limit source)) ac-limit))
+;;              (requires (cdr-safe (assq 'requires source)))
+;;              cand)
+;;         (if (or (null requires)
+;;                 (>= (length ac-target) requires))
+;;             (setq cand
+;;                   (delq nil
+;;                         (mapcar (lambda (candidate)
+;;                                   (propertize candidate 'source source))
+;;                                 (funcall (cdr (assq 'candidates source)))))))
+;;         (if (and (> ac-limit 1)
+;;                  (> (length cand) ac-limit))
+;;             (setcdr (nthcdr (1- ac-limit) cand) nil))
+;;         (setq candidates (append candidates cand))))
+;;     (delete-dups candidates)))
+
+;; (add-hook 'python-mode-hook
+;;           (lambda ()
+;;                  (auto-complete-mode 1)
+;;                  (set (make-local-variable 'ac-sources)
+;;                       (append ac-sources '(ac-source-rope) '(ac-source-yasnippet)))
+;;                  (set (make-local-variable 'ac-find-function) 'ac-python-find)
+;;                  (set (make-local-variable 'ac-candidate-function) 'ac-python-candidate)
+;;                  (set (make-local-variable 'ac-auto-start) nil)))
+
+;; ;;Ryan's python specific tab completion
+;; (defun ryan-python-tab ()
+;;   ; Try the following:
+;;   ; 1) Do a yasnippet expansion
+;;   ; 2) Do a Rope code completion
+;;   ; 3) Do an indent
+;;   (interactive)
+;;   (if (eql (ac-start) 0)
+;;       (indent-for-tab-command)))
+
+;; (defadvice ac-start (before advice-turn-on-auto-start activate)
+;;   (set (make-local-variable 'ac-auto-start) t))
+;; (defadvice ac-cleanup (after advice-turn-off-auto-start activate)
+;;   (set (make-local-variable 'ac-auto-start) nil))
+
+;; (define-key python-mode-map "\t" 'ryan-python-tab)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Additional modes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("Makefile$" . makefile-mode))
+
+;; Zen coding
+(require 'zencoding-mode)
+(add-hook 'sgml-mode-hook 'zencoding-mode)
+
+;; ACTR
 (require 'actr-mode)
 (setq auto-mode-alist (cons '("\\.actr$" . actr-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("\\.act$" . actr-mode) auto-mode-alist))
@@ -313,3 +448,12 @@
 ;; Cell Programming
 (setq auto-mode-alist (cons '("\\.spu.c$" . c-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("\\.spuc$" . c-mode) auto-mode-alist))
+
+;; Org-mode settings
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.org.txt$" . org-mode))
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+
+;; ZSH configuration editing mode
+(add-to-list 'auto-mode-alist '("/.?zsh.d/" . shell-script-mode))
