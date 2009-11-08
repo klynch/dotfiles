@@ -37,4 +37,7 @@ wget http://pymacs.progiciels-bpi.ca/archives/Pymacs-0.24-beta1.tar.gz
 tar zxf Pymacs-0.24-beta1.tar.gz
 rm Pymacs-0.24-beta1.tar.gz
 
+#Zen Coding
+wget http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el
+
 popd
