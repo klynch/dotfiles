@@ -3,3 +3,6 @@ emacs.d/auto-save-list/
 *.elc
 *~
 .*~
+CVS
+zsh.d/cache
+TODO

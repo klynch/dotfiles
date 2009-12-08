@@ -1,7 +1,6 @@
-alias pull='git pull'
-alias push='git push'
-
 if [[ -x `which git` ]]; then
+    alias pull='git pull'
+    alias push='git push'
 
 	  function git-branch-name () {
 		    git branch 2> /dev/null | grep '^\*' | sed 's/^\*\ //'

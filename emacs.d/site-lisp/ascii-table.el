@@ -44,6 +44,7 @@ Optional argument BASE can be either 8 for octal, 10 for decimal, or
   (other-window 1)
   (switch-to-buffer "*ASCII*")
   (erase-buffer)
+  (setq buffer-read-only t)
   (let ((fmt (cond ((eq base 16) "%4x %4s")
 		   ((eq base 8) "%4o %4s")
 		   (t "%4d %4s")))
@@ -56,7 +57,6 @@ Optional argument BASE can be either 8 for octal, 10 for decimal, or
       (if (= 0 (mod i 6))
 	  (newline)
 	(insert "   "))))
-  (setq buffer-read-only t)
   (other-window -1)
   (beginning-of-buffer))
 

@@ -1,29 +1,43 @@
-(setq dotemacs-dir "~/.emacs.d")
-(setq site-lisp-dir (concat dotemacs-dir "/site-lisp"))
-(setq dotemacs-private "~/.emacs.private")
+(require 'cl)
+(defvar *emacs-load-start* (current-time))
 
-(if (file-exists-p dotemacs-private)
-    (load dotemacs-private))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Emacs Loading
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (add-to-list 'load-path site-lisp-dir)
+;; In case we ever need to change the emacs directory location
+(defvar dotemacs-dir "~/.emacs.d/")
 
-;;TODO functionify this!
-(if (fboundp 'normal-top-level-add-subdirs-to-load-path)
-    (let* ((my-lisp-dir site-lisp-dir)
-           (default-directory my-lisp-dir))
-      (setq load-path (cons my-lisp-dir load-path))
-      (normal-top-level-add-subdirs-to-load-path)))
+;; We don't want the custom file cluttering our beautiful .emacs file
+(setq custom-file (concat dotemacs-dir "emacs-custom.el"))
+(load custom-file 'noerror)
+
+(defun add-subdirs-to-load-path (dir)
+  "Adds the subdirectories to the list if possible."
+  (if (fboundp 'normal-top-level-add-subdirs-to-load-path)
+      (let* ((my-lisp-dir dir)
+             (default-directory my-lisp-dir))
+        (add-to-list 'load-path my-lisp-dir)
+        (normal-top-level-add-subdirs-to-load-path))))
+
+;; Where all of our custom extensions and what not go
+(defvar site-lisp-dir (concat dotemacs-dir "site-lisp"))
+(add-subdirs-to-load-path site-lisp-dir)
+
+;; Let's not share our private stuff
+(load "~/.emacs-private.el" 'noerror)
 
 (if (fboundp 'image-load-path) nil (setq image-load-path '()))
-(add-to-list 'image-load-path (concat dotemacs-dir "/images/"))
+(add-to-list 'image-load-path (concat dotemacs-dir "images/"))
 
-;;TODO add this to a mode that can be enabled / disabled
-(autoload 'nuke-trailing-whitespace "whitespace" nil t)
-(add-hook 'write-file-hooks 'nuke-trailing-whitespace)
+;; We want to uniquify names instead of foo<1> foo<2>
+(require 'uniquify)
+(setq
+ uniquify-buffer-name-style 'post-forward
+ uniquify-separator ":")
 
 ;; TODO reduce color theme to only the themes i want
 (require 'color-theme)
-;;(require 'color-theme-tango)
 (color-theme-tty-dark)
 
 ;; (color-theme-initialize)
@@ -36,70 +50,67 @@
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
+;;TODO resize window based on screen size
+;; http://stackoverflow.com/questions/92971/how-do-i-set-the-size-of-emacs-window
+
 ;; GROWL or its alternatives. must set directory first
-(setq todochiku-icons-directory (concat dotemacs-dir "/todochiku-icons"))
-(require 'todochiku)
-(message "Todochiku loaded")
-;; TODO load these only if we are on a mac
+(autoload 'todochiku-message "todochiku")
+(autoload 'todochiku-icon "todochiku")
+(autoload 'todochiku-in "todochiku" nil t)
+
+;;TODO try setvar... see if its overrided?
+;; (custom-set-variables
+;;  '(todochiku-icons-directory (concat dotemacs-dir "todochiku-icons"))
+;;  '(todochiku-message-too t)
+;; )
+
+(defvar todochiku-icons-directory (concat dotemacs-dir "todochiku-icons"))
+(defvar todochiku-message-too t)
+
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+
 (if (eq system-type 'darwin)
-    (progn
-      (setq default-input-method "MacOSX")
-      (setq mac-pass-command-to-system nil)
-      (setq mac-command-modifier 'meta)
-      (setq mac-option-modifier nil)
-      (setq x-select-enable-clipboard t)
-      ;; We don't want to pop open new frames all the time
-      (setq ns-pop-up-frames nil)))
-
-;; (require 'textmate)
-;; (tm/initialize)
-
-;; Parenthesis highlighting for LISP/SCHEME
-;; (require 'cparen)
-;; (cparen-activate)
-;; (show-paren-mode t)
+    (setq
+     default-input-method "MacOSX"
+     mac-command-modifier 'meta
+     mac-option-modifier nil
+     ns-pop-up-frames nil))
 
 ;; Adds color stuff for a shell
 ;; (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
 ;; (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
-;; TODO fix twitter faces
-(require 'twit)
-(setq twit-show-user-images t)
-
-(autoload 'twit-show-recent-tweets "twit" nil t)
-(autoload 'twit-show-at-tweets     "twit" nil t)
-(autoload 'twit-show-friends 		"twit" nil t)
-(autoload 'twit-show-followers 		"twit" nil t)
-
-(autoload 'twit-follow-recent-tweets	"twit" nil t)
-
-(autoload 'twit-post			"twit" nil t)
-(autoload 'twit-post-region		"twit" nil t)
-(autoload 'twit-post-buffer		"twit" nil t)
-(autoload 'twit-direct			"twit" nil t)
-
-(autoload 'twit-add-favorite		"twit" nil t)
-(autoload 'twit-remove-favorite 	"twit" nil t)
-
-(autoload 'twit-add-friend  		"twit" nil t)
-(autoload 'twit-remove-friend 		"twit" nil t)
-
+(autoload 'twit-show-recent-tweets              "twit" nil t)
+(autoload 'twit-show-at-tweets                  "twit" nil t)
+(autoload 'twit-show-friends                    "twit" nil t)
+(autoload 'twit-show-followers                  "twit" nil t)
+(autoload 'twit-follow-recent-tweets            "twit" nil t)
+(autoload 'twit-post                            "twit" nil t)
+(autoload 'twit-post-region                     "twit" nil t)
+(autoload 'twit-post-buffer                     "twit" nil t)
+(autoload 'twit-direct                          "twit" nil t)
+(autoload 'twit-add-favorite                    "twit" nil t)
+(autoload 'twit-remove-favorite                 "twit" nil t)
+(autoload 'twit-add-friend                      "twit" nil t)
+(autoload 'twit-remove-friend                   "twit" nil t)
 (autoload 'twit-show-direct-tweets-with-account "twit" nil t)
-(autoload 'twit-show-at-tweets-with-account 	"twit" nil t)
+(autoload 'twit-show-at-tweets-with-account     "twit" nil t)
+(eval-after-load "twit"
+  '(if window-system (setq twit-show-user-images t)))
 
-;; (global-set-key "\C-cTT"  'twit-follow-recent-tweets) ; (s)how (T)weets
-;; (global-set-key "\C-cTst" 'twit-follow-recent-tweets) ; (s)how (t)weets
-;; (global-set-key "\C-cTsa" 'twit-show-at-tweets)       ; (s)how (a)t
-;; (global-set-key "\C-cTsf" 'twit-show-at-tweets)       ; (s)how (f)riends
-;; (global-set-key "\C-cTsl" 'twit-show-at-tweets)       ; (s)how fo(l)lowers
-
-;; (global-set-key "\C-cTpp" 'twit-post)		      ; (p)ost
-;; (global-set-key "\C-cTpr" 'twit-post-region)	      ; (p)post (r)egion
-;; (global-set-key "\C-cTpb" 'twit-post-buffer)	      ; (p)post (b)uffer
-;; (global-set-key "\C-cTpr" 'twit-direct)		      ; (p)post (d)irect
-;; (global-set-key "\C-cTfa" 'twit-add-favorite)	      ; (f)avorite (a)dd
-;; (global-set-key "\C-cTfr" 'twit-remove-favorite)      ; (f)avorite (r)emove
+(global-set-key "\C-cTT"  'twit-follow-recent-tweets) ; (s)how (T)weets
+(global-set-key "\C-cTst" 'twit-show-recent-tweets)   ; (s)how (t)weets
+(global-set-key "\C-cTsa" 'twit-show-at-tweets)       ; (s)how (a)t
+(global-set-key "\C-cTsf" 'twit-show-friends)         ; (s)how (f)riends
+(global-set-key "\C-cTsl" 'twit-show-followers)       ; (s)how fo(l)lowers
+(global-set-key "\C-cTpp" 'twit-post)		              ; (p)ost
+(global-set-key "\C-cTpr" 'twit-post-region)	        ; (p)ost (r)egion
+(global-set-key "\C-cTpb" 'twit-post-buffer)	        ; (p)ost (b)uffer
+(global-set-key "\C-cTpr" 'twit-direct)		            ; (p)ost (d)irect
+(global-set-key "\C-cTfa" 'twit-add-favorite)	        ; (f)avorite (a)dd
+(global-set-key "\C-cTfr" 'twit-remove-favorite)      ; (f)avorite (r)emove
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Additional functions
@@ -110,10 +121,9 @@
   (interactive)
   (if (file-newer-than-file-p "~/.emacs" "~/.emacs.elc")
       (byte-compile-file "~/.emacs"))
+  (if (file-newer-than-file-p "~/.emacs-private.el" "~/.emacs-private.elc")
+      (byte-compile-file "~/.emacs-private.el"))
   (byte-recompile-directory site-lisp-dir 0))
-
-(require 'ascii-table)
-(require 'count-words)
 
 (defun electric-pair ()
   "If at end of line, insert character pair without surrounding spaces.
@@ -122,7 +132,6 @@
   (if (eolp) (let (parens-require-spaces) (insert-pair))
     (self-insert-command 1)))
 
-;; Indent the whole buffer
 (defun indent-page ()
   "Indent the entire buffer."
   (interactive)
@@ -131,68 +140,113 @@
     (goto-char (point-max))
     (indent-region (mark) (point) nil)))
 
+(autoload 'ascii-table         "ascii-table" nil t)
+(autoload 'ascii-table-decimal "ascii-table" nil t)
+(autoload 'ascii-table-octal   "ascii-table" nil t)
+(autoload 'ascii-table-hex     "ascii-table" nil t)
+
+(autoload 'count-words-region "count-words" nil t)
+(autoload 'count-words-page   "count-words" nil t)
+
+;;TODO add this to a mode that can be enabled / disabled
+(autoload 'nuke-trailing-whitespace "whitespace" nil t)
+(add-hook 'write-file-hooks 'nuke-trailing-whitespace)
+
+(defun rename-file-and-buffer (new-name)
+  "Renames both current buffer and file it's visiting to NEW-NAME."
+  (interactive "sNew name: ")
+  (let ((name (buffer-name))
+ (filename (buffer-file-name)))
+    (if (not filename)
+ (message "Buffer '%s' is not visiting a file!" name)
+      (if (get-buffer new-name)
+   (message "A buffer named '%s' already exists!" new-name)
+ (progn
+   (rename-file name new-name 1)
+   (rename-buffer new-name)
+   (set-visited-file-name new-name)
+   (set-buffer-modified-p nil))))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Key Mappings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar k-minor-mode-map (make-keymap) "k-minor-mode keymap.")
 
 ;; Make the `Delete' key delete the char under the cursor
-(global-set-key [delete]        'delete-char)
-(global-set-key [kp-delete]     'delete-char)
-(global-set-key [insert]        'yank)
-(global-set-key [C-delete]      'undo)
+(define-key k-minor-mode-map [delete]        'delete-char)
+(define-key k-minor-mode-map [kp-delete]     'delete-char)
+(define-key k-minor-mode-map [insert]        'yank)
+(define-key k-minor-mode-map [C-delete]      'undo)
 
 ;; Makes home/end go to beginning/end of line
-(define-key global-map [end] 'end-of-line)
-(define-key global-map [home] 'beginning-of-line)
+(define-key k-minor-mode-map [end] 'end-of-line)
+(define-key k-minor-mode-map [home] 'beginning-of-line)
 
 ;; Makes control + home/end go to beginning/end of buffer
-(define-key global-map [C-end] 'end-of-buffer)
-(define-key global-map [C-home] 'beginning-of-buffer)
+(define-key k-minor-mode-map [C-end] 'end-of-buffer)
+(define-key k-minor-mode-map [C-home] 'beginning-of-buffer)
 
-(require 'pager)
-(global-set-key "\C-v"	   'pager-page-down)
-(global-set-key [next] 	   'pager-page-down)
-(global-set-key "\M-v" 	   'pager-page-up)
-(global-set-key [prior]	   'pager-page-up)
-(global-set-key [M-up]     'pager-row-up)
-(global-set-key [M-kp-8]   'pager-row-up)
-(global-set-key [M-down]   'pager-row-down)
-(global-set-key [M-kp-2]   'pager-row-down)
+;; Pager stuff
+(autoload 'pager-row-up    "pager" nil t)
+(autoload 'pager-page-up   "pager" nil t)
+(autoload 'pager-row-down  "pager" nil t)
+(autoload 'pager-page-down "pager" nil t)
+(define-key k-minor-mode-map [M-up]          'pager-row-up)
+(define-key k-minor-mode-map [M-down]        'pager-row-down)
+(define-key k-minor-mode-map [prior]         'pager-page-up)
+(define-key k-minor-mode-map [next]          'pager-page-down)
+(define-key k-minor-mode-map [M-kp-8]        'pager-row-up)
+(define-key k-minor-mode-map [M-kp-2]        'pager-row-down)
+(define-key k-minor-mode-map (kbd "\M-v") 	 'pager-page-up)
+(define-key k-minor-mode-map (kbd "\C-v")	   'pager-page-down)
 
-(global-set-key [(f1)]     'man-follow)
-(global-set-key [(f6)]     'nuke-trailing-whitespace)
-(global-set-key [(f7)]     'indent-page)
-(global-set-key [(f8)]     'toggle-truncate-lines)
+(define-key k-minor-mode-map [f1]            'man-follow)
+(define-key k-minor-mode-map [f2]            nil)
+(define-key k-minor-mode-map [f3]            nil)
+(define-key k-minor-mode-map [f4]            nil)
+(define-key k-minor-mode-map [f5]            'toggle-truncate-lines)
+(define-key k-minor-mode-map [f6]            'nuke-trailing-whitespace)
+(define-key k-minor-mode-map [f7]            'indent-page)
 
 ;; cycle through buffers
-(global-set-key [C-tab]    'bs-cycle-next)
-(global-set-key [S-tab]    'bs-cycle-previous)
+(define-key k-minor-mode-map [C-tab]         'bs-cycle-next)
+(define-key k-minor-mode-map [S-tab]         'bs-cycle-previous)
 
 ;; window stuff
-(global-set-key [C-kp-enter]    'other-window)
-(global-set-key [C-kp-add]      'enlarge-window)
-(global-set-key [C-kp-subtract] 'shrink-window)
+(define-key k-minor-mode-map [C-kp-enter]    'other-window)
+(define-key k-minor-mode-map [C-kp-add]      'enlarge-window)
+(define-key k-minor-mode-map [C-kp-subtract] 'shrink-window)
 
-(global-set-key (kbd "\C-x f") 'make-frame)
-(global-set-key (kbd "\C-x g") 'delete-frame)
+(define-key k-minor-mode-map (kbd "\C-x f")  'make-frame)
+(define-key k-minor-mode-map (kbd "\C-x g")  'delete-frame)
 
-(global-set-key (kbd "\C-c c") 	'compile)
-(global-set-key (kbd "\C-c g") 	'goto-line)
-(define-key global-map (kbd "\C-c q") 'comment-or-uncomment-region)
+(define-key k-minor-mode-map (kbd "\C-x p")  'align-regexp)
 
-(global-set-key (kbd "\C-x t")  'toggle-truncate-lines)
-(global-set-key (kbd "\C-x r")  'toggle-read-only)
-(global-set-key (kbd "\C-x n")  'nuke-trailing-whitespace)
+(define-key k-minor-mode-map (kbd "\C-c c")  'compile)
+(define-key k-minor-mode-map (kbd "\C-c g")  'goto-line)
+(define-key k-minor-mode-map (kbd "\C-c q")  'comment-or-uncomment-region)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Mouse Settings
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define-key k-minor-mode-map (kbd "\C-x t")  'toggle-truncate-lines)
+(define-key k-minor-mode-map (kbd "\C-x r")  'toggle-read-only)
+(define-key k-minor-mode-map (kbd "\C-x n")  'nuke-trailing-whitespace)
+
+(define-key k-minor-mode-map (kbd "\C-c l")  'org-store-link)
+(define-key k-minor-mode-map (kbd "\C-c a")  'org-agenda)
 
 ;; Mouse button 1 drags the scroll bar
-(define-key global-map [vertical-scroll-bar down-mouse-1] 'scroll-bar-drag)
+(define-key k-minor-mode-map [vertical-scroll-bar down-mouse-1] 'scroll-bar-drag)
 
 ;; Use the mouse wheel if available
 (mouse-wheel-mode t)
+
+(define-minor-mode k-minor-mode
+  "A minor mode so that my key settings override annoying major modes."
+  t
+  " K"
+  'k-minor-mode-map)
+
+(k-minor-mode t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Display
@@ -261,9 +315,67 @@
 (setq tab-width 2)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; MAGIT
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(autoload 'magit-status "magit" nil t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; CEDET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path (concat dotemacs-dir "cedet/common"))
+;;(require 'cedet)
+
+(add-to-list 'load-path (concat dotemacs-dir "ecb"))
+;;(load-file "~/.emacs.d/ecb/ecb.el")
+;;(require 'ecb)
+
+;;(require 'ecb-autoloads)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Company Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(eval-when-compile (require 'company))
+
+(autoload 'company-mode "company" nil t)
+(setq company-backends nil)
+(defun complete-or-indent ()
+  (interactive)
+  (if (company-manual-begin)
+      (company-complete-common)
+    (indent-according-to-mode)))
+
+(defun indent-or-complete ()
+  (interactive)
+  (if (looking-at "\\_>")
+      (company-complete-common)
+    (indent-according-to-mode)))
+
+(global-set-key "\t" 'indent-or-complete)
+(global-set-key "\M-/" 'company-complete-common)
+
+(defun add-company-backend (hook backends)
+  "Adds a list of backends to the backendlist for a mode"
+  (interactive)
+  (add-hook 'hook (lambda ()
+                    (set (make-local-variable 'company-backends) 'backend))))
+
+(add-hook 'emacs-lisp-mode-hook (lambda () (set (make-local-variable 'company-backends) '(company-elisp))))
+;;(add-company-backend 'emacs-lisp-mode-hook '(company-elisp))
+
+(add-hook 'python-mode-hook (lambda () (set (make-local-variable 'company-backends) '(company-ropemacs company-pysmell))))
+;;(add-company-backend 'python-mode-hook '(company-ropemacs company-pysmell))
+
+;;TODO finish hooks
+;;TODO automatically start
+;;TODO bind TAB to YaSnippet -> Company Mode -> Indent
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; YaSnippet
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq snippets-dir (concat dotemacs-dir "/snippets"))
+(defvar snippets-dir (concat dotemacs-dir "snippets"))
 
 (require 'yasnippet)
 (yas/initialize)
@@ -273,10 +385,10 @@
 ;;; C/C++ Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customizations for all modes in CC Mode.
+(eval-when-compile (require 'cc-mode))
 (add-hook 'c-mode-common-hook
           (lambda ()
             (setq show-trailing-whitespace t)
-
             (c-toggle-electric-state 1)
             (c-toggle-hungry-state 1)
             (c-toggle-auto-newline 1)
@@ -288,6 +400,28 @@
 
 ;; Set the indentation width for C-style programming languages
 (setq-default c-basic-offset 2)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Ediff Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; http://www.emacswiki.org/emacs/EdiffMode
+;; (setq ediff-split-window-function 'split-window-horizontally)
+;; (setq ediff-split-window-function (lambda (&optional arg)
+;;                                     (if (> (frame-width) 150)
+;;                                         (split-window-horizontally arg)
+;;                                       (split-window-vertically arg))))
+
+;; ediff-make-wide-display-function
+;; ediff-toggle-read-only-function
+
+;; Usage: emacs -diff file1 file2
+(defun command-line-diff (switch)
+  (let ((file1 (pop command-line-args-left))
+        (file2 (pop command-line-args-left)))
+    (ediff file1 file2)))
+
+(add-to-list 'command-switch-alist '("diff" . command-line-diff))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Text Mode
@@ -308,152 +442,129 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'matlab)
-(setq auto-mode-alist (cons '("\\.m$'" . matlab-mode) auto-mode-alist))
-(setq matlab-shell-command-switches
-      '("-nojvm" "-nodesktop" "-nodisplay" "-nosplash"))
-(setq matlab-shell-history-file "~/.matlab/R2009a/history.m")
+(add-to-list 'auto-mode-alist '("\\.m$'" . matlab-mode))
+(setq matlab-shell-command-switches '("-nojvm" "-nodesktop" "-nodisplay" "-nosplash")
+      matlab-shell-history-file "~/.matlab/R2009a/history.m")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Auto-Complete Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (require 'auto-complete-config)
+;; (require 'auto-complete)
+;; (global-auto-complete-mode t)
+
+;; (setq ac-auto-start nil)
+;; (global-set-key "\M-/" 'ac-start)
+;; (define-key ac-complete-mode-map "\M-/" 'ac-stop)
+;; ;;(define-key ac-complete-mode-map "\C-n" 'ac-next)
+;; ;;(define-key ac-complete-mode-map "\C-p" 'ac-previous)
+;; (define-key ac-complete-mode-map "\t" 'ac-complete)
+;; ;;(define-key ac-complete-mode-map "\r" nil)
+;; (setq ac-dwim t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; LISP Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Parenthesis highlighting for LISP/SCHEME
+(autoload 'cparen-activate "cparen" nil t)
+;; (add-hook 'lisp-mode-hook 'cparen-activate)
+;; (add-hook 'lisp-interaction-mode-hook 'cparen-activate)
+;; (add-hook 'emacs-lisp-mode-hook 'cparen-activate)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Python Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'python)
-;; (require 'auto-complete)
-;; (autoload 'pymacs-apply "pymacs")
-;; (autoload 'pymacs-call "pymacs")
-;; (autoload 'pymacs-eval "pymacs" nil t)
-;; (autoload 'pymacs-exec "pymacs" nil t)
-;; (autoload 'pymacs-load "pymacs" nil t)
+(autoload 'rst-mode "rst-mode" "RST Mode." t)
+(add-to-list 'auto-mode-alist '("\\.rst$"  . rst-mode))
+(add-to-list 'auto-mode-alist '("\\.rest$" . rst-mode))
 
-;; ;; Initialize Rope
-;; (pymacs-load "ropemacs" "rope-")
-;; (setq ropemacs-enable-autoimport t)
+(autoload 'doctest-mode "doctest-mode" "doctest mode" t)
+(add-to-list 'auto-mode-alist '("\\.doctest$" . doctest-mode))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;; Auto-completion
-;; ;;;  Integrates:
-;; ;;;   1) Rope
-;; ;;;   2) Yasnippet
-;; ;;;   all with AutoComplete.el
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (defun prefix-list-elements (list prefix)
-;;   (let (value)
-;;     (nreverse
-;;      (dolist (element list value)
-;;       (setq value (cons (format "%s%s" prefix element) value))))))
+(eval-when-compile (require 'python-mode))
+(autoload 'python-mode "python-mode" "Python Mode." t)
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
+(add-to-list 'interpreter-mode-alist '("python" . python-mode))
 
-;; (defvar ac-source-rope
-;;   '((candidates
-;;      . (lambda ()
-;;          (prefix-list-elements (rope-completions) ac-target))))
-;;   "Source for Rope")
+(add-hook 'python-mode-hook
+          (lambda ()
+            (set-variable 'py-indent-offset 4)
+            ;; (set-variable 'py-smart-indentation nil)
+            (set-variable 'indent-tabs-mode nil)
+            (define-key py-mode-map (kbd "RET") 'newline-and-indent)
+            (define-key py-mode-map [f8]        'flymake-mode)
+            (define-key py-mode-map [f9]        'python-mode)
+            (define-key py-mode-map [f10]       'doctest-mode)
+            (define-key py-mode-map [f11]       'rst-mode)
+            ;; (define-key py-mode-map [tab] 'yas/expand)
+            ;; (setq yas/after-exit-snippet-hook 'indent-according-to-mode)
+            ;; (smart-operator-mode-on)
+            ))
 
-;; (defun ac-python-find ()
-;;   "Python `ac-find-function'."
-;;   (require 'thingatpt)
-;;   (let ((symbol (car-safe (bounds-of-thing-at-point 'symbol))))
-;;     (if (null symbol)
-;;         (if (string= "." (buffer-substring (- (point) 1) (point)))
-;;             (point)
-;;           nil)
-;;       symbol)))
+(eval-when-compile (require 'flymake))
+;; code checking via flymake
+;; set code checker here from "epylint", "pyflakes"
+(defvar pycodechecker "pyflakes")
+(when (load "flymake" t)
+  (defun flymake-pycodecheck-init ()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-inplace))
+           (local-file (file-relative-name
+                        temp-file
+                        (file-name-directory buffer-file-name))))
+      (list pycodechecker (list local-file))))
+  (add-to-list 'flymake-allowed-file-name-masks
+               '("\\.py\\'" flymake-pycodecheck-init)))
 
-;; (defun ac-python-candidate ()
-;;   "Python `ac-candidates-function'"
-;;   (let (candidates)
-;;     (dolist (source ac-sources)
-;;       (if (symbolp source)
-;;           (setq source (symbol-value source)))
-;;       (let* ((ac-limit (or (cdr-safe (assq 'limit source)) ac-limit))
-;;              (requires (cdr-safe (assq 'requires source)))
-;;              cand)
-;;         (if (or (null requires)
-;;                 (>= (length ac-target) requires))
-;;             (setq cand
-;;                   (delq nil
-;;                         (mapcar (lambda (candidate)
-;;                                   (propertize candidate 'source source))
-;;                                 (funcall (cdr (assq 'candidates source)))))))
-;;         (if (and (> ac-limit 1)
-;;                  (> (length cand) ac-limit))
-;;             (setcdr (nthcdr (1- ac-limit) cand) nil))
-;;         (setq candidates (append candidates cand))))
-;;     (delete-dups candidates)))
-
-;; (add-hook 'python-mode-hook
-;;           (lambda ()
-;;                  (auto-complete-mode 1)
-;;                  (set (make-local-variable 'ac-sources)
-;;                       (append ac-sources '(ac-source-rope) '(ac-source-yasnippet)))
-;;                  (set (make-local-variable 'ac-find-function) 'ac-python-find)
-;;                  (set (make-local-variable 'ac-candidate-function) 'ac-python-candidate)
-;;                  (set (make-local-variable 'ac-auto-start) nil)))
-
-;; ;;Ryan's python specific tab completion
-;; (defun ryan-python-tab ()
-;;   ; Try the following:
-;;   ; 1) Do a yasnippet expansion
-;;   ; 2) Do a Rope code completion
-;;   ; 3) Do an indent
-;;   (interactive)
-;;   (if (eql (ac-start) 0)
-;;       (indent-for-tab-command)))
-
-;; (defadvice ac-start (before advice-turn-on-auto-start activate)
-;;   (set (make-local-variable 'ac-auto-start) t))
-;; (defadvice ac-cleanup (after advice-turn-off-auto-start activate)
-;;   (set (make-local-variable 'ac-auto-start) nil))
-
-;; (define-key python-mode-map "\t" 'ryan-python-tab)
+;; (add-hook 'find-file-hook 'flymake-find-file-hook)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Additional modes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'auto-mode-alist '("Makefile$" . makefile-mode))
+(add-to-list 'auto-mode-alist '("Makefile$"    . makefile-mode))
 
-;; Zen coding
-(require 'zencoding-mode)
+(autoload 'zencoding-mode "zencoding-mode" nil t)
 (add-hook 'sgml-mode-hook 'zencoding-mode)
 
-;; ACTR
-(require 'actr-mode)
-(setq auto-mode-alist (cons '("\\.actr$" . actr-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.act$" . actr-mode) auto-mode-alist))
+(autoload 'actr-mode "actr-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.actr$"     . actr-mode))
+(add-to-list 'auto-mode-alist '("\\.act$"      . actr-mode))
 
-;; Stratego mode
 (autoload 'stratego-mode "stratego" nil t)
-(setq auto-mode-alist (cons '("\\.cltx$" . stratego-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.cr$" . stratego-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.r$" . stratego-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.ss$" . stratego-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.str$" . stratego-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.sdf$" . stratego-mode) auto-mode-alist))
+(add-to-list 'auto-mode-alist '("\\.cltx$"     . stratego-mode))
+(add-to-list 'auto-mode-alist '("\\.cr$"       . stratego-mode))
+(add-to-list 'auto-mode-alist '("\\.r$"        . stratego-mode))
+(add-to-list 'auto-mode-alist '("\\.ss$"       . stratego-mode))
+(add-to-list 'auto-mode-alist '("\\.str$"      . stratego-mode))
+(add-to-list 'auto-mode-alist '("\\.sdf$"      . stratego-mode))
 
-;; Ruby Mode
-;; Rake files are ruby, too, as are gemspecs.
-(add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Rakefile$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rake$"     . ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile$"    . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec$"  . ruby-mode))
 
 ;; We never want to edit Rubinius bytecode
 (add-to-list 'completion-ignored-extensions ".rbc")
 
-;; STK (Scheme) mode
-(setq auto-mode-alist (cons '("\\.stk$" . scheme-mode) auto-mode-alist))
+(add-to-list 'auto-mode-alist '("\\.stk$"      . scheme-mode))
 
-;; Text2Tags
-;;    (setq auto-mode-alist (cons '("\.t2t$" . text2tags-mode) auto-mode-alist))
+(add-to-list 'auto-mode-alist '("\\.t2t$"      . text2tags-mode))
 
-;; Cell Programming
-(setq auto-mode-alist (cons '("\\.spu.c$" . c-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.spuc$" . c-mode) auto-mode-alist))
+(add-to-list 'auto-mode-alist '("\\.spu.c$"    . c-mode))
+(add-to-list 'auto-mode-alist '("\\.spuc$"     . c-mode))
 
-;; Org-mode settings
-(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
-(add-to-list 'auto-mode-alist '("\\.org.txt$" . org-mode))
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
+(add-to-list 'auto-mode-alist '("\\.org$"      . org-mode))
+(add-to-list 'auto-mode-alist '("\\.org.txt$"  . org-mode))
 
-;; ZSH configuration editing mode
 (add-to-list 'auto-mode-alist '("/.?zsh.d/" . shell-script-mode))
+
+(todochiku-message "Emacs"
+                   (format ".emacs loaded in %ds"
+                           (destructuring-bind (hi lo ms) (current-time)
+                             (- (+ hi lo)
+                                (+ (first *emacs-load-start*)
+                                   (second *emacs-load-start*)))))
+                   (todochiku-icon 'check))

@@ -1,0 +1,3 @@
+if [[ -x `which emacs` ]]; then
+    alias ediff='emacs -diff'
+fi

@@ -21,6 +21,8 @@ if (( EUID == 0 )); then
     path=(/opt/local/sbin $path)
 fi
 
+path=(/opt/local/Library/Frameworks/Python.framework/Versions/2.6/bin $path)
+
 path=(/opt/local/bin $path)
 manpath=(/opt/local/man $manpath)
 infopath=(/opt/local/share/info $infopath)
@@ -45,7 +47,7 @@ alias matlab='matlab -nodesktop -nodisplay -nosplash'
 EMACS=${EMACS_APP}/Contents/MacOS/Emacs
 
 function emacs-compile() {
-    #TODO
+    ${EMACS} -batch -f batch-byte-compile $*
 }
 
 #TODO make this emacsclient if emacs-server is not running
@@ -53,8 +55,9 @@ function emacs () {
     ${EMACS} $*&
 }
 
-
-
+function psg () {
+    ps aux | grep $1
+}
 
 ########################################
 #######################################
@@ -143,6 +146,7 @@ esac
 # If running interactively, then:
 if [ "$PS1" ]; then
     PS1='%n@%M:%c [%h | %j]%# '
+    export GREP_OPTIONS='--color=auto'
 
     # colour ls
 	  if [[ $OSTYPE = (darwin*|solaris*) ]]; then
@@ -161,7 +165,7 @@ if [ "$PS1" ]; then
 #
 	  autoload -U compinit; compinit
     zstyle ':completion:*' use-cache on
-    #zstyle ':completion:*' cache-path ~/.zsh.d/cache
+    zstyle ':completion:*' cache-path ~/.zsh.d/cache
 
 # complete hostnames out of ssh's ~/.ssh/known_hosts
     zstyle ':completion:*' users resolve
@@ -193,6 +197,7 @@ if [ "$PS1" ]; then
 	  bindkey -e
     bindkey "\C-w" kill-region
 fi
+
 
 #### ALIAS ####
 #general commands
