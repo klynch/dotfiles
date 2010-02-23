@@ -46,6 +46,9 @@ alias matlab='matlab -nodesktop -nodisplay -nosplash'
 
 EMACS=${EMACS_APP}/Contents/MacOS/Emacs
 
+emacspath=path
+typeset -U emacspath
+
 function emacs-compile() {
     ${EMACS} -batch -f batch-byte-compile $*
 }
@@ -242,14 +245,22 @@ case $TERM in
 	  screen|xterm*|rxvt|linux)
 		    PROMPT="$PR_BLUE%n$PR_WHITE$@$PR_LIGHT_BLUE$%m$PR_WHITE:$PR_GREEN$%c [%h | %j]%# $PR_NO_COLOR"
 		    ;;
+	  eterm-color)
+		    PROMPT="$PR_BLUE%n$PR_WHITE$@$PR_LIGHT_BLUE$%m$PR_WHITE:$PR_GREEN$%c [%h | %j]%# $PR_NO_COLOR"
+		    ;;
 	  *)
-		    PROMPT="[FIX PROMPT CASE] $PR_BLUE%n$PR_WHITE$@$PR_LIGHT_BLUE$%m$PR_WHITE:$PR_GREEN$%c [%h | %j]%~ $PR_NO_COLOR"
+		    PROMPT="$PR_BLUE%n$PR_WHITE$@$PR_LIGHT_BLUE$%m$PR_WHITE:$PR_GREEN$%c [%h | %j]%~ $PR_NO_COLOR"
 esac
 
 
 #### EXTRA ####
 
 ## functions
+function fixperms () {
+  sudo chmod -R ugo+rX $1
+  sudo find $1 -type l -exec chmod -h ugo+rX \{\} \;
+}
+
 ## restore all .bak files
 function restore_bak () {
 	  autoload -U zmv
@@ -282,15 +293,16 @@ function umount_file () {
 function extract () {
     if [ -f $1 ] ; then
         case $1 in
-            *.bz2)        bunzip2 $1       ;;
-            *.rar)        unrar e -ad $1   ;;
-            *.gz)         gunzip $1        ;;
-            *.zip)        unzip $1         ;;
-            *.tar)        tar xf $1        ;;
             *.tar.bz2)    tar xjf $1       ;;
             *.tbz2)       tar xjf $1       ;;
             *.tar.gz)     tar xzf $1       ;;
             *.tgz)        tar xzf $1       ;;
+            *.bz2)        bunzip2 $1       ;;
+            *.rar)        unrar e -ad $1   ;;
+            *.gz)         gunzip $1        ;;
+            *.zip)        unzip $1         ;;
+            *.jar)        unzip $1         ;;
+            *.tar)        tar xf $1        ;;
             *.Z)          uncompress $1    ;;
             *) echo "'$1' cannot be extracted via extract()" ;;
         esac
@@ -382,5 +394,7 @@ _rake () {
 
 compdef _rake rake
 
+#TODO make this better!
 source ~/.zsh.d/git
+source ~/.zsh.d/emacs
 #source ~/.zsh.d/port

@@ -1,6 +1,15 @@
+# set the official command prefix to C-~ (tilde), *not* C-a!
+#escape ^`
+#http://ryan.barrett.name/dotfiles/screenrc
+#http://anjo.pastebin.ca/248272
+#http://hans.fugal.net/blog/2009/02/05/pimping-screen/
+#http://github.com/nixer/screenrc
+
 startup_message off
 autodetach on
-vbell on
+vbell off
 vbell_msg " *beep* "
 
 termcapinfo xterm|xterms|xs|rxvt ti@:te@
+
+escape ^``

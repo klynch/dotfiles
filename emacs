@@ -46,9 +46,10 @@
 ;; (if (not (window-system))
 ;;     (color-theme-tty-dark))
 
-;;(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(unless window-system
+  (if (fboundp 'menu-bar-mode) (menu-bar-mode -1)))
 
 ;;TODO resize window based on screen size
 ;; http://stackoverflow.com/questions/92971/how-do-i-set-the-size-of-emacs-window
@@ -77,10 +78,6 @@
      mac-command-modifier 'meta
      mac-option-modifier nil
      ns-pop-up-frames nil))
-
-;; Adds color stuff for a shell
-;; (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
-;; (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
 (autoload 'twit-show-recent-tweets              "twit" nil t)
 (autoload 'twit-show-at-tweets                  "twit" nil t)
@@ -150,23 +147,51 @@
 
 ;;TODO add this to a mode that can be enabled / disabled
 (autoload 'nuke-trailing-whitespace "whitespace" nil t)
-(add-hook 'write-file-hooks 'nuke-trailing-whitespace)
+(add-hook 'write-file-functions 'nuke-trailing-whitespace)
 
 (defun rename-file-and-buffer (new-name)
   "Renames both current buffer and file it's visiting to NEW-NAME."
   (interactive "sNew name: ")
   (let ((name (buffer-name))
- (filename (buffer-file-name)))
+        (filename (buffer-file-name)))
     (if (not filename)
- (message "Buffer '%s' is not visiting a file!" name)
+        (message "Buffer '%s' is not visiting a file!" name)
       (if (get-buffer new-name)
-   (message "A buffer named '%s' already exists!" new-name)
- (progn
-   (rename-file name new-name 1)
-   (rename-buffer new-name)
-   (set-visited-file-name new-name)
-   (set-buffer-modified-p nil))))))
+          (message "A buffer named '%s' already exists!" new-name)
+        (progn
+          (rename-file name new-name 1)
+          (rename-buffer new-name)
+          (set-visited-file-name new-name)
+          (set-buffer-modified-p nil))))))
 
+(defvar term-cmd (getenv "SHELL"))
+(defvar term-cmd "/opt/local/bin/zsh")
+(autoload 'term-check-proc "term")
+(defun visit-ansi-term ()
+  "If the current buffer is:
+     1) a running ansi-term named *ansi-term*, rename it.
+     2) a stopped ansi-term, kill it and create a new one.
+     3) a non ansi-term, go to an already running ansi-term
+        or start a new one while killing a defunt one"
+  (interactive)
+  (let ((is-term (string= "term-mode" major-mode))
+        (is-running (term-check-proc (buffer-name)))
+        (anon-term (get-buffer "*ansi-term*")))
+    (if is-term
+        (if is-running
+            (if (string= "*ansi-term*" (buffer-name))
+                (call-interactively 'rename-buffer)
+              (if anon-term
+                  (switch-to-buffer "*ansi-term*")
+                (ansi-term term-cmd)))
+          (kill-buffer (buffer-name))
+          (ansi-term term-cmd))
+      (if anon-term
+          (if (term-check-proc "*ansi-term*")
+              (switch-to-buffer "*ansi-term*")
+            (kill-buffer "*ansi-term*")
+            (ansi-term term-cmd))
+        (ansi-term term-cmd)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Key Mappings
@@ -202,7 +227,7 @@
 (define-key k-minor-mode-map (kbd "\C-v")	   'pager-page-down)
 
 (define-key k-minor-mode-map [f1]            'man-follow)
-(define-key k-minor-mode-map [f2]            nil)
+(define-key k-minor-mode-map [f2]            'visit-ansi-term)
 (define-key k-minor-mode-map [f3]            nil)
 (define-key k-minor-mode-map [f4]            nil)
 (define-key k-minor-mode-map [f5]            'toggle-truncate-lines)
@@ -285,7 +310,7 @@
 (set-default 'fill-column 79)
 
 ;; Set the frame title
-(setq-default frame-title-format (concat "%b - emacs@" system-name))
+(setq-default frame-title-format (concat "%b - %F@" system-name))
 
 ;; Use spaces instead of tabs in general
 (setq-default indent-tabs-mode nil)
@@ -299,7 +324,7 @@
 ;; Stop adding newlines to the end of files when moving down
 (setq-default next-line-add-newlines nil)
 
-;; Resize the mini-buffer when necessary
+;; Resize the mini-buffer  necessary
 (setq-default resize-minibuffer-mode t)
 
 ;; Scroll just one line when point passes off the screen
@@ -353,8 +378,8 @@
       (company-complete-common)
     (indent-according-to-mode)))
 
-(global-set-key "\t" 'indent-or-complete)
-(global-set-key "\M-/" 'company-complete-common)
+(define-key k-minor-mode-map (kbd "\t")  'indent-or-complete)
+(define-key k-minor-mode-map (kbd "\M-/")  'company-complete-common)
 
 (defun add-company-backend (hook backends)
   "Adds a list of backends to the backendlist for a mode"
@@ -381,6 +406,15 @@
 (yas/initialize)
 (yas/load-directory snippets-dir)
 
+;;(add-to-list 'auto-mode-alist '(snippets-dir . snippet-mode))
+
+;;(remove-hook 'write-file-functions 'nuke-trailing-whitespace t)
+
+;; Enable versioning with default values (keep five last versions, I think!)
+;;(setq version-control t)
+;; Save all backup file in this directory.
+;;(setq backup-directory-alist (quote ((".*" . "~/.emacs_backups/"))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; C/C++ Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -390,8 +424,8 @@
           (lambda ()
             (setq show-trailing-whitespace t)
             (c-toggle-electric-state 1)
-            (c-toggle-hungry-state 1)
-            (c-toggle-auto-newline 1)
+            ;;            (c-toggle-hungry-state 1)
+            ;;            (c-toggle-auto-newline 1)
             ))
 
 (require 'google-c-style)
@@ -462,6 +496,18 @@
 ;; (define-key ac-complete-mode-map "\t" 'ac-complete)
 ;; ;;(define-key ac-complete-mode-map "\r" nil)
 ;; (setq ac-dwim t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Latex Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(set-variable (quote latex-run-command) "pdflatex")
+(set-variable (quote tex-dvi-view-command) "open")
+
+(autoload 'tex-mode-flyspell-verify "flyspell" "" t)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode) ;;LaTeX
+(when (load "flyspell" t)
+  (setq flyspell-issue-message-flag nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; LISP Mode
@@ -545,6 +591,13 @@
 (add-to-list 'auto-mode-alist '("\\.rake$"     . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile$"    . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec$"  . ruby-mode))
+
+(require 'yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yml$"      . yaml-mode))
+
+;; (add-hook 'yaml-mode-hook
+;;           '(lambda ()
+;;              (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
 
 ;; We never want to edit Rubinius bytecode
 (add-to-list 'completion-ignored-extensions ".rbc")

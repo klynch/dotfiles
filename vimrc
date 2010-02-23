@@ -1,5 +1,12 @@
+call pathogen#runtime_append_all_bundles()
+
 set tabstop=2
+set smarttab
 set shiftwidth=2
+set autoindent
+set expandtab
+
+
 set nowrap
 set textwidth=80
 set background=dark
@@ -9,7 +16,6 @@ set showcmd
 set splitbelow
 set nohlsearch
 syntax on
-set expandtab
 
 let themeindex=0
 map <F5> :make<Enter> 
@@ -60,13 +66,9 @@ augroup end
 
 augroup formating
     autocmd!
-    autocmd BufRead Makefile* set noexpandtab
+    autocmd BufRead,BufNewFile Makefile* set noexpandtab
     autocmd BufRead *.py set noexpandtab
     autocmd BufRead,BufNewFile *.txt set nosmartindent
     autocmd BufRead,BufNewFile *.m set filetype=matlab
 augroup end
 
-
-
-" Load matchit (% to bounce from do to end, etc.)
-  runtime! macros/matchit.vim

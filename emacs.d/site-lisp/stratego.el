@@ -39,7 +39,7 @@
   (setq local-abbrev-table stratego-mode-abbrev-table)
   (setq major-mode 'stratego-mode)
   (setq mode-name "Stratego")
-  
+
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'stratego-indent-line)
 
@@ -137,10 +137,10 @@
 "}"
 "~"
 
-    ("^[ \t]*\\([a-zA-Z0-9'_-]+\\)[ \t]*\\(([^)]*)[ \t]*\\)?:" 
+    ("^[ \t]*\\([a-zA-Z0-9'_-]+\\)[ \t]*\\(([^)]*)[ \t]*\\)?:"
      (1 font-lock-type-face nil nil)
      (2 font-lock-variable-name-face nil t))
-    ("^[ \t]*\\([a-zA-Z0-9'_-]+\\)[ \t]*\\(([^)]*)[ \t]*\\)?=" 
+    ("^[ \t]*\\([a-zA-Z0-9'_-]+\\)[ \t]*\\(([^)]*)[ \t]*\\)?="
      (1 font-lock-function-name-face nil nil)
      (2 font-lock-variable-name-face nil t))
     ("//.*$" 0 'font-lock-comment-face t)
@@ -161,13 +161,13 @@
 (defvar stratego-lvl1-indent 2)
 (defvar stratego-rule-indent 2)
 (defvar stratego-strategy-indent 2)
-(defvar stratego-default-indent 8)
-(defvar stratego-colon-indent 6)
-(defvar stratego-after-colon-indent 8)
-(defvar stratego-equals-indent 6)
-(defvar stratego-after-equals-indent 8)
-(defvar stratego-arrow-indent 40)
-(defvar stratego-after-arrow-indent 42)
+(defvar stratego-default-indent 4)
+(defvar stratego-colon-indent 4)
+(defvar stratego-after-colon-indent 4)
+(defvar stratego-equals-indent 4)
+(defvar stratego-after-equals-indent 4)
+(defvar stratego-arrow-indent 4)
+(defvar stratego-after-arrow-indent 4)
 
 (defvar stratego-indentation-list
   '(("module" . stratego-base-indent)
@@ -185,12 +185,12 @@
   (save-excursion
     (beginning-of-line)
     (point)))
-  
+
 (defun stratego-get-eol ()
   (save-excursion
     (end-of-line)
     (point)))
-  
+
 (defun stratego-get-indent (list)
   (save-excursion
     (beginning-of-line)
@@ -292,6 +292,3 @@
 	    (goto-char pos)
 	    (+ 1 (current-column)))
 	nil))))
-	       
-	    
- 
