@@ -1,0 +1,3 @@
+#! /usr/bin/env zsh
+
+source /Users/kevin/Projects/Aniketos/git/aniketos-bin/aniketos-env.sh

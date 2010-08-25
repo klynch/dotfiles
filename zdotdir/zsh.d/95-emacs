@@ -1,0 +1,20 @@
+#! /usr/bin/env zsh
+
+typeset -x EMACS=${EMACS:=$(which emacs)}
+
+if [[ -x ${EMACS} ]]; then
+
+	function emacs-compile() {
+		${EMACS} -batch -f batch-byte-compile $*
+	}
+
+	#TODO make this emacsclient if emacs-server is not running
+	function emacs () {
+		${EMACS} $*&
+	}
+
+	function ediff () {
+		${EMACS} -diff $*&
+	}
+
+fi

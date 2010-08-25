@@ -1,3 +1,5 @@
+#! /usr/bin/env zsh
+
 if [[ -x `which git` ]]; then
     alias pull='git pull'
     alias push='git push'

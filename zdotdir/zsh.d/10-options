@@ -1,0 +1,82 @@
+#! /usr/bin/env zsh
+
+#Set all zsh options
+
+setopt nobeep                  # i hate beeps
+setopt noautomenu              # don't cycle completions
+setopt autocd                  # change to dirs without cd
+setopt pushdignoredups         # and don't duplicate them
+setopt cdablevars              # avoid the need for an explicit $
+setopt nocheckjobs             # don't warn me about bg processes when exiting
+setopt nohup                   # and don't kill them, either
+setopt nolisttypes             # show types in completion
+setopt extendedglob            # weird & wacky pattern matching - yay zsh!
+setopt completeinword          # not just at the end
+setopt alwaystoend             # when complete from middle, move cursor
+setopt correct                 # spelling correction
+setopt nopromptcr              # don't add \n which overwrites cmds with no \n
+setopt histverify              # when using ! cmds, confirm first
+setopt interactivecomments     # escape commands so i can use them later
+setopt printexitvalue          # alert me if something's failed
+setopt hist_ignore_dups        # ignore same commands run twice+
+setopt appendhistory           # don't overwrite history
+
+###################################
+
+## The file to save the history in when an interactive shell exits.
+## If unset, the history is not saved.
+HISTFILE=${HOME}/.zsh_history
+
+## The maximum number of events stored in the internal history list.
+HISTSIZE=1000
+
+## The maximum number of history events to save in the history file.
+SAVEHIST=1000
+
+## maximum size of the directory stack.
+DIRSTACKSIZE=10
+
+## This set of functions implements a sort of magic history searching.
+## After predict-on, typing characters causes the editor to look backward
+## in the history for the first line beginning with what you have typed so
+## far.  After predict-off, editing returns to normal for the line found.
+## In fact, you often don't even need to use predict-off, because if the
+## line doesn't match something in the history, adding a key performs
+## standard completion - though editing in the middle is liable to delete
+## the rest of the line.
+autoload -U predict-on
+zle -N predict-on
+zle -N predict-off
+bindkey "^X^Z" predict-on ## C-x C-z
+bindkey "^Z" predict-off ## C-z
+
+## This allows incremental completion of a word.
+## After starting this command, a list of completion
+## choices can be shown after every character you
+## type, which you can delete with ^h or DEL.
+## RET will accept the completion so far.
+## You can hit TAB to do normal completion, ^g to
+## abort back to the state when you started, and ^d to list the matches.
+autoload -U incremental-complete-word
+zle -N incremental-complete-word
+bindkey "^Xi" incremental-complete-word ## C-x-i
+
+#HOME and END key should behave as expected
+# ctrl-a and ctrl-e will also work (emacs style)
+bindkey '\e[1~' beginning-of-line
+bindkey '\e[4~' end-of-line
+case $TERM in (xterm*)
+	  bindkey '\e[H' beginning-of-line
+	  bindkey '\e[F' end-of-line ;;
+esac
+
+[ -w $zsh_cache ] && HISTFILE=$zsh_cache/history
+
+HISTSIZE=10000              # size of history
+LISTMAX=1000                # never ask
+NULLCMD='cat'               # use cat for > null commands
+REPORTTIME=2                # report time if execution exceeds amount of seconds
+SAVEHIST=10000              # maximum of history events to be save
+LOGCHECK=60
+watch=(notme)               # watch login/logout
+WORDCHARS="*?_-.[]~/&;!#$%^(){}<>" # part of word in line editor
