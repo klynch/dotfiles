@@ -11,3 +11,16 @@
 [github]
 	user = klynch
 	token = 5c8c6663393c13753d2edac0f9ab3772
+[core]
+	excludesfile = ~/.gitignore
+[alias]
+  st = status
+  ci = commit
+  br = branch
+  co = checkout
+  df = diff
+  lg = log -p
+  lol = log --graph --decorate --pretty=oneline --abbrev-commit
+  lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  ls = ls-files
+
