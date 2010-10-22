@@ -17,10 +17,19 @@ set splitbelow
 set nohlsearch
 syntax on
 
+"set statusline=%<%F%h%m%r%h%w%y\ %{&ff}\ %{strftime(\"%d/%m/%Y-%H:%M\")}%=\ col:%c%V\ ascii:%b\ pos:%o\ lin:%l\,%L\ %P
+"set statusline=%<%F%h%m%r%h%w%y\ %{&ff}\ %{strftime(\"%c\",getftime(expand(\"%:p\")))}%=\ lin:%l\,%L\ col:%c%V\ pos:%o\ %ascii:%b\ %P
+set statusline=%<%F%h%m%r%h%w%y\ %{&ff}\ %{strftime(\"%c\",getftime(expand(\"%:p\")))}%=\ lin:%l\,%L\ col:%c%V\ pos:%o\ %ascii:%b\ %P
+set laststatus=2
+
 let themeindex=0
 map <F5> :make<Enter> 
 map <F4> :noh<Enter> 
 map <C-z> :set invnumber<Enter>
+
+nnoremap <F2> :set invpaste paste?<CR>
+set pastetoggle=<F2>
+set showmode
 
 map <C-y> ,#
 map <C-t> ,$

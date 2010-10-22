@@ -1,15 +1,155 @@
-# set the official command prefix to C-~ (tilde), *not* C-a!
-#escape ^`
-#http://ryan.barrett.name/dotfiles/screenrc
-#http://anjo.pastebin.ca/248272
-#http://hans.fugal.net/blog/2009/02/05/pimping-screen/
-#http://github.com/nixer/screenrc
+# .screenrc - GNU Screen config file
+#
+# Randy Morris (rson451@gmail.com)
+#
+# CREATED:  a long time ago
+# MODIFIED: 2010-04-14 09:22
+#
+# Note: This file closly ties in with my zshrc for the screen title stuff.
+#       See http://rsontech.net/dotfiles/zshrc
+#
 
-startup_message off
-autodetach on
-vbell off
-vbell_msg " *beep* "
+# Basic Settings {{{
 
-termcapinfo xterm|xterms|xs|rxvt ti@:te@
+#deflogin on                        # All screens are considered logins
+autodetach on                      # Detach on HUP instead of kill
+startup_message off                # Don't be annoying
+vbell off                          # Don't be annoying
+defshell -$SHELL                   # The dash makes it a login shell
+defscrollback 10000                # Remember a lot
+nonblock on                        # Block input from hung applications
+defutf8 on                         # Always use utf8
+defflow off                        # Turn off flow-control
+msgwait 3                          # Display msgs for N seconds
+altscreen on                       # Enable alternate screen support
+attrcolor b ".I"                   # Allow bold colors
+defbce on                          # Erase background with current background color
+bell_msg ""                       # For urgency hints
+term screen-256color-bce           # Set $TERM
 
-escape ^``
+# hardcopydir:  The directory which contains all hardcopies.
+#hardcopydir ~/.hardcopy
+#hardcopydir ~/.screen
+
+escape ``
+
+# }}}
+
+# Define terminal capibilities {{{
+
+terminfo rxvt-unicode 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+termcapinfo xterm 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+
+# }}}
+
+
+
+# Hardstatus {{{
+#hardstatus alwayslastline "%?%F%{-b bc}%:%{-b bb}%? %?%F%{+u wb}%? %-Lw%{+b by}%n%f* %t%{-}%+Lw%-0<   %{= kw}%M%d %c%{-}"
+#hardstatus alwayslastline '%{= kG}%{C}Screen: %{c}%{= kG}[%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{C} %d-%m %{W}%c %{g}]'
+
+hardstatus alwayslastline '%{= kG}%-Lw%{= kW}%50> %n*%f %t%{= kG}%+Lw%< %{= kG} %-=%H | %D %m/%d/%y | %C:%s %A %{-}'
+
+# caption description:
+# caption always "%?%F%{-b bc}%:%{-b bb}%?%C|%D|%M %d|%H%?%F%{+u wb}%? %L=%-Lw%45>%{+b by}%n%f* %t%{-}%+Lw%-0<"
+# 
+# Anything I don't describe is treated literally.
+# 
+# %?          - Start of a conditional statement.
+#  %F         - Use this part of the statement if the window has focus (i.e. it
+#               is the only window or the currently active one).
+#  %{-b bc}   - Turn off bold, blue foreground, cyan background.
+# %:          - else
+#  %{-b bb}   - Turn off bold, blue foreground, blue background (this obscures
+#               the text on non-focused windows and just gives a blue line).
+# %?          - End conditional statement.
+#  %C         - time (hh:mm, leading space) in 12 hour format
+#  %D         - Three-letter day-of-week appreviation
+#  %M         - Three-letter month appreviation
+#  %d         - Day of the month
+#  %H         - hostname
+#  %?         - Start of conditional statement.
+#   %F        - Use this part of the statement if the window has focus.
+#   %{+u wb}  - underlined, white foreground, blue background
+#  %?         - End conditional (if not focused, text remaind blue on blue).
+#    %L=      - truncation/padding point.  With the 'L' qualifier, basically
+#               just acts as a reference point.  Further truncation/padding is
+#               done relative to here, not the beginning of the string
+#    %-Lw     - window list up to but not including the current window (-),
+#               show window flags (L)
+#    %45>     - truncation/padding marker; place this point about 45% of the
+#               way into the display area (45)
+#    %{+b by} - add bold (still underlined from before), blue foreground,
+#               yellow background
+#      %n     - number of the current window
+#      %f     - flags for current window
+#      %t     - title of current window
+#    %{-}     - undo last color change (so now we're back to underlined white
+#               on blue)  (technically, this is a pop; a second invocation
+#               would drop things back to unadorned blue on cyan)
+#    %+Lw     - window list from the next window on (-), show window flags (L)
+#    %-0<     - truncation/padding point.  Place this point zero spaces (0)
+#               from the right margin (-).
+
+
+
+
+
+# }}}
+
+
+# Banish screen 0, it sucks {{{
+bind c screen 1
+bind ^c screen 1
+bind 0 select 10
+screen -t zsh 1
+# }}}
+
+
+# Keybinds {{{
+
+# Banish stupid s default behavior, make it more useful
+bind s split # -v
+
+# Be lazy and use Fx keys for screen switching
+bindkey -k k1 select 1
+bindkey -k k2 select 2
+bindkey -k k3 select 3
+bindkey -k k4 select 4
+bindkey -k k5 select 5
+bindkey -k k6 select 6
+bindkey -k k7 select 7
+bindkey -k k8 select 8
+
+# Use F13 as escape (for caps-lock mapped to F13)
+#bindkey -k F3 command
+
+#bind j focus down
+#bind k focus up
+#bind h focus left
+#bind l focus right
+
+bind = resize =
+bind + resize +1
+bind - resize -1
+bind _ resize max
+
+#bind J resize +5
+#bind K resize -5
+
+bind ^A focus
+
+#bindkey -k F2 hardstatus alwaysignore # F12 to turn the status bar on
+#bindkey -k k9 screen # bind F9  to create a new screen
+#bindkey -k k; title  # bind F10 to rename current screen window
+#bindkey -k F1 prev   # bind F11 to move to previous window
+#bindkey -k F2 next   # bind F12 to move to next window
+
+# }}}
+
+
+#source ${HOME}/.screenrc-${HOST}
+
+
+# vim:foldlevel=0
+
