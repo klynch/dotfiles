@@ -1,4 +1,4 @@
-call pathogen#runtime_append_all_bundles()
+"call pathogen#runtime_append_all_bundles()
 
 set tabstop=2
 set smarttab
