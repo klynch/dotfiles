@@ -10,7 +10,7 @@
 	threads = 0
 [github]
 	user = klynch
-	token = 5c8c6663393c13753d2edac0f9ab3772
+	token = NO 
 [core]
 	excludesfile = ~/.gitignore
 [alias]
