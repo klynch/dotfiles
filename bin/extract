@@ -1,0 +1,47 @@
+#!/bin/sh
+
+#!/usr/bin/env bash
+
+TXTBLD=$(tput bold)     # Bold
+TXTUND=$(tput sgr 0 1)  # Underline
+TXTRED=$(tput setaf 1)  # Red
+TXTGRN=$(tput setaf 2)  # Green
+TXTYLW=$(tput setaf 3)  # Yellow
+TXTBLU=$(tput setaf 4)  # Blue
+TXTPUR=$(tput setaf 5)  # Purple
+TXTCYN=$(tput setaf 6)  # Cyan
+TXTWHT=$(tput setaf 7)  # White
+TXTRST=$(tput sgr0)     # Reset
+
+function not_supported() {
+    echo "${TXTBLD}${TXTPUR} Not yet supported ${TXTRST}"
+}
+
+if [[ -z "$@" ]]; then
+    echo "${TXTBLD}${TXTRED}Usage: $(basename $0) FILE.EXT [LOCATION] - extracts common file formats${TXTRST}"
+    exit 1
+else
+    if [ -f $1 ]; then
+        echo "${TXTBLD} Extracting ${TXTRED}$1${TXTWHT} . . . ${TXTRST}"
+        case $1 in
+            *.7z)       7z x $1                 ;;
+            *.tar)      tar xvf $1 ${2:+-C $2}  ;;
+            *.tar.bz2)  tar xvjf $1 ${2:+-C $2} ;;
+            *.tbz2)     tar xvjf $1 ${2:+-C $2} ;;
+            *.tar.gz)   tar xvzf $1 ${2:+-C $2} ;;
+            *.tgz)      tar xvzf $1 ${2:+-C $2} ;;
+            *.rar)      unrar x $1              ;;
+            *.zip)      unzip $1                ;;
+            *.Z)        uncompress $1           ;;
+            *.bz2)      bunzip2 $1              ;;
+            *.gz)       gunzip $1               ;;
+            *.jar)      unzip $1                ;;
+            *.cpio)     not_supported           ;;
+            *.deb)      not_supported           ;;
+            *.rpm)      not_supported           ;;
+            *.cab)      not_supported           ;;
+            *.arj)      not_supported           ;;
+            *)          echo "${TXTBLD}${TXTGRN} * ${TXTRST}Not a supported file format." 1>&2 ;;
+        esac
+    fi
+fi

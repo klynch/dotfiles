@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+function usage {
+    echo "Usage: $(basename $0) -h[elp] -m[eridiem]" 1>&2
+    echo "    -h    Display this help messsage" 1>&2
+    echo "    -m    Display the time in 12-hour format" 1>&2
+}
+
+while getopts "hm" o; do
+    case "$o" in
+        h)
+            echo "Oh shit, look at the time! Print the time in 24-hour format" 1>&2
+            usage && exit 1 ;;
+        m)
+            TWELVE=1 ;;
+        [?])
+            usage && exit 1 ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+([[ -z $TWELVE ]] && date +"%H:%M:%S") || date +"%I:%M:%S %p"

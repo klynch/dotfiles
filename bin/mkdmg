@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Creates a disk image (dmg) on Mac OS X from the command line.
+# usage:
+#    mkdmg <volname> <vers> <srcdir>
+#
+# Where <volname> is the name to use for the mounted image, <vers> is the version
+# number of the volume and <srcdir> is where the contents to put on the dmg are.
+#
+# The result will be a file called <volname>-<vers>.dmg
+
+if [ $# != 3 ]; then
+ echo "usage: mkdmg.sh volname vers srcdir"
+ exit 0
+fi
+
+VOL="$1"
+VER="$2"
+DIR="$3"
+DST="${VOL}-${VER}.dmg"
+
+TEMPDIR=$(mktemp -d -t tmp)
+DMG="${TEMPDIR}/tmp.dmg"
+
+SIZE=$(du -sm ${DIR} | awk '{ print $1 + 5 }')
+hdiutil create -srcfolder "${DIR}" -volname "${VOL}" -fs HFS+ \
+    -fsargs "-c c=64,a=16,e=16" -format UDRW -size ${SIZE}m ${DMG}
+
+# hdiutil attach ${DMG}
+# DISK=$(hdiutil attach -readwrite -noverify -noautoopen ${DMG} | \
+#     egrep '^/dev/' | sed 1q | awk '{print $1}')
+# chmod -Rf go-w /Volumes/"${VOL}"
+# sync
+# sync
+# hdiutil detach ${DISK}
+
+hdiutil convert -format UDZO -imagekey zlib-level=9 -o ${DST} ${DMG}
+
+rm -f ${TEMPDIR}

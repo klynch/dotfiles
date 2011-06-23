@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+function usage {
+    echo "Usage: $(basename $0) -h[elp] -c[alendar]" 1>&2
+    echo "    -h    Display this help messsage" 1>&2
+    echo "    -c    Display the date in calendar format of MM-DD-YYYY" 1>&2
+}
+
+while getopts "hc" o; do
+    case "$o" in
+        h)
+            echo "Oh shit, look at the time! Print the date in YYYYMMDD format" 1>&2
+            usage && exit 1 ;;
+        c)
+            CALENDAR=1 ;;
+        [?])
+            usage && exit 1 ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+([[ -z $CALENDAR ]] && date +"%Y%d%m") || date +"%m-%d-%Y"

@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+# Copyright (c) 2011 Kevin Lynch
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+# This script copies (1) files to a directory on the local machine, (2) from a remote
+# machine to a directory on the local machine, (3) from the local machine to a
+# directory on a remote machine, (4) from a remote machine to a directory on
+# the same remote machine, and (5) from a remote machine to a directory on
+# a different remote machine.
+#
+# Instead of transferring files directly with scp, the files are automatically
+# combined into a single tar stream that is transferred across the network and
+# uncompressed on the other machine.
+#
+# Usage: scp-tar [[user@]host1:]SRCFILE1 [[user@]host1:]SRCFILE2 [[user@]host1:]SRCDIR3 [[user@]host2:]DSTDIR"
+#
+# Copyright (c) 2011 - Kevin Lynch
+
+function split_path() {
+    local PART="${1:?ERROR: split_path needs 'HOST'|'FILE' part and a ADDR}"
+    local addr="${2:?ERROR: split_path needs 'HOST'|'FILE' part and a ADDR}"
+
+    local regexp='([-_A-Za-z0-9@\.]+:)?(.+)?'
+
+    if [[ ${addr} =~ $regexp ]]; then
+        case $PART in
+            HOST) echo "${BASH_REMATCH[1]}" ;;
+            FILE) echo "${BASH_REMATCH[2]}" ;;
+            *) echo "ERROR: split_path needs 'HOST'|'FILE' part and a ADDR" 1>&2 && exit 1 ;;
+        esac
+    fi
+}
+
+function path_host() {
+    split_path HOST "$1"
+}
+
+function path_file() {
+    split_path FILE "$1"
+}
+
+function host() {
+    echo "${1:0:$((${#1} - 1))}"
+}
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $(basename $0) [[user@]host1:]SRC [[user@]host2:]DSTDIR" 1>&2
+    exit 1
+fi
+
+#Process all of the source files. They must all be from the same machine
+for var in "${@:1:$((${#@} - 1))}"; do
+    host=$(path_host "$var")
+    file=$(path_file "$var")
+
+    #If src_host is not defined, then set it to our current host
+    src_host=${src_host-$host}
+
+    #If our current host differs from the first host, report an error
+    if [[ "$host" != "$src_host" ]]; then
+        echo "ERROR: all SRC files must originate from same HOST" 1>&2
+        exit 1
+    fi
+
+    src_files+=("$file")
+done
+
+#Process the destination
+dst="${@:${#@}}"
+dst_host=$(path_host "${dst}")
+dst_dir=$(path_file "${dst}")
+
+# function quote_array() {
+#     for var in "$@"; do
+#         echo -n "\"$var\" "
+#     done
+# }
+
+function quote_array() {
+    for var in "$@"; do
+        echo -n "\"$var\" "
+    done
+}
+
+if [[ -z "$src_host" ]] && [[ -z "$dst_host" ]]; then
+    #local src; local dst
+    mkdir -p "$dst_dir"
+    cp -R "${src_files[@]}" "$dst_dir"
+elif [[ -z "$src_host" ]]; then
+    #local src; remote dst
+    tar cf - "${src_files[@]}" | ssh $(host $dst_host) "${dst_dir:+mkdir -p \"$dst_dir\" &&} tar xf - ${dst_dir:+-C \"$dst_dir\"}"
+elif [[ -z "$dst_host" ]]; then
+    #remote src; local dst
+    ssh $(host $src_host) "tar cf - $(quote_array "${src_files[@]}")" | ( mkdir -p "$dst_dir" && tar xf - -C "$dst_dir" )
+elif [[ "$src_host" == "$dst_host" ]]; then
+    #remote src; remote dst; host_src_host==dst_host
+    ssh $(host $src_host) "${dst_dir:+mkdir -p \"$dst_dir\" &&} cp -R $(quote_array "${src_files[@]}") \"${dst_dir:-.}\""
+elif [[ "$src_host" != "$dst_host" ]]; then
+    #remote src; remote dst; host_src_host!=dst_host
+    ssh $(host $src_host) "tar cf - $(quote_array "${src_files[@]}")" | ssh $(host $dst_host) "${dst_dir:+mkdir -p \"$dst_dir\" &&} tar xf - ${dst_dir:+-C \"$dst_dir\"}"
+fi
+
+#echo fee >foo; echo bee >bar; echo balls >ping\ pong
+
+#Local -> Local (ALL OKAY)
+#scp-tar ping\ pong ding\ dong
+#scp-tar foo bar ping\ pong ding\ dong
+#scp-tar newdir/* test
+#scp-tar newdir/{bar,foo,"ping pong"} test
+
+
+#Local -> Remote
+#scp-tar foo bar ping\ pong tux.cs.drexel.edu:newdir
+#scp-tar foo bar ping\ pong tux.cs.drexel.edu:
+#scp-tar newdir/* tux.cs.drexel.edu:test
+#scp-tar newdir/{bar,foo,"ping pong"} tux.cs.drexel.edu:test
+
+#Remote -> Local
+#scp-tar tux.cs.drexel.edu:foo tux.cs.drexel.edu:bar tux.cs.drexel.edu:ping\ pong newdir
+#scp-tar tux.cs.drexel.edu:newdir/foo tux.cs.drexel.edu:newdir/bar tux.cs.drexel.edu:newdir/ping\ pong newdir
+#scp-tar tux.cs.drexel.edu:newdir/* test
+#scp-tar tux.cs.drexel.edu:newdir/{bar,foo,"ping pong"} test
+
+#Remote A -> Remote A
+#scp-tar tux.cs.drexel.edu:foo tux.cs.drexel.edu:bar tux.cs.drexel.edu:ping\ pong tux.cs.drexel.edu:newdir
+#scp-tar tux.cs.drexel.edu:newdir/foo tux.cs.drexel.edu:newdir/bar tux.cs.drexel.edu:newdir/ping\ pong tux.cs.drexel.edu:
+#scp-tar scotch.cs.drexel.edu:newdir/* scotch.cs.drexel.edu:test
+#scp-tar scotch.cs.drexel.edu:{newdir/*, test}
+
+#Remote A -> Remote B
+#scp-tar tux.cs.drexel.edu:foo tux.cs.drexel.edu:bar tux.cs.drexel.edu:ping\ pong scotch.cs.drexel.edu:newdir
+#scp-tar tux.cs.drexel.edu:foo tux.cs.drexel.edu:bar tux.cs.drexel.edu:ping\ pong scotch.cs.drexel.edu:

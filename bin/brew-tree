@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+echo "Depstree"
+brew depstree "$@"
+echo -e "\n\nMissing"
+brew missing "$@"
+echo -e "\n\nOptions Tree"
+brew optionstree "$@"
