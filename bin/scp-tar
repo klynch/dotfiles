@@ -35,6 +35,13 @@
 #
 # Copyright (c) 2011 - Kevin Lynch
 
+if [ "$BASH_VERSION" \< "4" ]
+then
+  echo "This script works only with Bash 4 or greater."
+  echo "Upgrade strongly recommended."
+  exit 80
+fi
+
 function split_path() {
     local PART="${1:?ERROR: split_path needs 'HOST'|'FILE' part and a ADDR}"
     local addr="${2:?ERROR: split_path needs 'HOST'|'FILE' part and a ADDR}"

@@ -1,22 +1,48 @@
 #!/usr/bin/env bash
 
+# Copyright (c) 2011 Kevin Lynch
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 function usage {
-    echo "Usage: $(basename $0) -h[elp] -m[eridiem]" 1>&2
-    echo "    -h    Display this help messsage" 1>&2
-    echo "    -m    Display the time in 12-hour format" 1>&2
+    echo "Usage: $(basename $0) -h[elp] -m[eridiem] -s[eparator] SEP" 1>&2
+    echo "    -h       Display this help messsage" 1>&2
+    echo "    -m       Display the time in 12-hour format" 1>&2
+    echo "    -s SEP   Set the separator" 1>&2
 }
 
-while getopts "hm" o; do
+SEP=:
+
+while getopts "hms:" o; do
     case "$o" in
         h)
             echo "Oh shit, look at the time! Print the time in 24-hour format" 1>&2
             usage && exit 1 ;;
         m)
             TWELVE=1 ;;
+        s)
+            SEP=$OPTARG ;;
         [?])
             usage && exit 1 ;;
     esac
 done
 shift $(($OPTIND - 1))
 
-([[ -z $TWELVE ]] && date +"%H:%M:%S") || date +"%I:%M:%S %p"
+([[ -z $TWELVE ]] && date +"%H${SEP}%M${SEP}%S") || date +"%I${SEP}%M${SEP}%S %p"
