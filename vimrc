@@ -23,9 +23,8 @@ set statusline=%<%F%h%m%r%h%w%y\ %{&ff}\ %{strftime(\"%c\",getftime(expand(\"%:p
 set laststatus=2
 
 let themeindex=0
-map <F1> <nop>
-map <F5> :make<Enter> 
-map <F4> :noh<Enter> 
+map <F5> :make<Enter>
+map <F4> :noh<Enter>
 map <C-z> :set invnumber<Enter>
 
 nnoremap <F2> :set invpaste paste?<CR>
@@ -51,7 +50,7 @@ map ,% :s/^/%/<CR>
 map ,! :s/^/!/<CR>
 map ,; :s/^/;/<CR>
 map ,- :s/^/--/<CR>
-map ,c :s/^\/\/\\|^--\\|^> \\|^[#"%!;]//<CR> 
+map ,c :s/^\/\/\\|^--\\|^> \\|^[#"%!;]//<CR>
 
 au BufNewFile,BufRead *.rhtml set syn=eruby
 au BufNewFile,BufRead *.rsel set syn=ruby
@@ -81,4 +80,3 @@ augroup formating
     autocmd BufRead,BufNewFile *.txt set nosmartindent
     autocmd BufRead,BufNewFile *.m set filetype=matlab
 augroup end
-
