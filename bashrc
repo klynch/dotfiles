@@ -256,6 +256,11 @@ stty erase ^?
 #export LESS=' -R '
 #http://linux-tips.org/article/78/syntax-highlighting-in-less
 
+###########################################################################
+##### CDPATH
+###########################################################################
+
+load_cdpath
 
 ###########################################################################
 ##### PATH VARIABLES
@@ -280,8 +285,6 @@ if is_osx; then
     #requires `gem install brewbygems`
     export GEM_HOME=${HOMEBREW}/Cellar/gems/1.8
 fi
-
-#pathprepend . CDPATH
 
 sourceconf-noposix /opt/local/etc/bash_completion
 sourceconf-noposix /etc/bash_completion

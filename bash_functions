@@ -27,6 +27,17 @@ function pathappend {
     export $PATHVARIABLE="${!PATHVARIABLE:+${!PATHVARIABLE}:}$1"
 }
 
+function load_cdpath {
+    local CDPATH_CONF=.cdpath
+    CDPATH=.
+    if [ -f ${CDPATH_CONF} ]; then
+        while read dir; do
+            pathappend "${dir}" CDPATH
+        done < ${CDPATH_CONF}
+    fi
+    export CDPATH
+}
+
 function pathlist {
     local IFS=':'
     local DIR
