@@ -3,24 +3,43 @@
 	status = auto
 	diff = auto
 	ui = auto
+
 [user]
 	name = Kevin Lynch
-	email = klynch@gmail.com 
+	email = klynch@gmail.com
+
 [pack]
 	threads = 0
-[github]
-	user = klynch
-	token = NO 
+
 [core]
 	excludesfile = ~/.gitignore
+
+[push]
+  default = current
+
 [alias]
-  st = status
-  ci = commit
-  br = branch
+  s = status
+  sb = status -sb
   co = checkout
-  df = diff
+  b = checkout -b
+  br = branch
   lg = log -p
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
   ls = ls-files
-
+  ci = commit
+  a = commit --amend
+  c = commit
+  ca = commit -a
+  msg = commit --allow-empty -m
+  d = diff
+  dh = diff HEAD^
+  dm = diff master
+  p = !gh-pick
+  pick = cherry-pick -s
+  remaster = rebase master
+  rei = rebase -i master
+  top = git rev-parse HEAD
+	sts = stash save
+	sta = stash apply
+	stp = stash pop
